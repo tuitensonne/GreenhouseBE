@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { MqttService } from './mqtt/mqtt.service';
+import { DevicesModule } from './devices/devices.module';
+import { MqttModule } from './mqtt/mqtt.module';
 
 @Module({
-  imports: [],
   controllers: [AppController],
-  providers: [AppService],
+  imports: [DevicesModule,MqttModule],
 })
 export class AppModule {}
