@@ -1,4 +1,10 @@
 export interface DeviceAdafruitDto {
-    deviceFeed: string,
-    value: string
+    topic: string,
+    value: number
+}
+
+export interface CreateDeviceDTO {
+    maxValue:    number
+    type:        string
+    topic:       string
 }
