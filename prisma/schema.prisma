@@ -6,3 +6,27 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  ID        Int    @id @default(autoincrement())
+  email     String @unique @db.VarChar(100)
+  password  String @db.VarChar(100)
+  username  String @db.VarChar(100)
+}
+
+model Device {
+  ID          Int     @id @default(autoincrement())
+  maxValue    Int?
+  type        String
+  topic       String  @unique
+  records     Record[]
+}
+
+model Record {
+  ID          Int     @id @default(autoincrement())
+  value       Int
+  dateCreated DateTime
+
+  device      Device  @relation(fields: [deviceID] , references: [ID])
+  deviceID    Int
+}

@@ -1,14 +1,22 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { DevicesService } from './devices.service';
-import { DeviceAdafruitDto } from './dto';
+import { CreateDeviceDTO, DeviceAdafruitDto } from './dto';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('devices')
 export class DevicesController {
   constructor(private readonly devicesService: DevicesService) {}
 
-
-  @Post('sendDataToAda')
-  async sendData(@Body() devicesDto : DeviceAdafruitDto) {
-    return this.devicesService.sendData(devicesDto);
+  @UseGuards(AuthGuard)
+  @Post('sendData')
+  async sendData(@Body() device : DeviceAdafruitDto) {
+    return this.devicesService.sendData(device);
   }
+
+  @UseGuards(AuthGuard)
+  @Post('addDevice')
+  async addDevice(@Body() device: CreateDeviceDTO) {
+    return this.devicesService.addDevice(device);
+  }
+
 }
