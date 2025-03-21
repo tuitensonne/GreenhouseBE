@@ -1,5 +1,6 @@
+/* eslint-disable semi */
 import React from 'react'
-import { TextField, Checkbox, FormControlLabel, Button, Typography, Divider, Box, Container, Grid, Paper,  IconButton, InputAdornment } from '@mui/material'
+import { TextField, Checkbox, FormControlLabel, Button, Typography, Divider, Box, Container, Grid, Paper,  IconButton, InputAdornment, Snackbar, Alert } from '@mui/material'
 import { assets } from '../../assets/asset.js'
 import FacebookIcon from '@mui/icons-material/Facebook'
 import GoogleIcon from '@mui/icons-material/Google'
@@ -7,10 +8,55 @@ import { Link } from 'react-router-dom'
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useState } from 'react';
+import { login } from '../../apis/auth';
+import { useNavigate } from 'react-router-dom';
+
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+    setLoading(true);
+    if (!email.trim() || !password.trim()) {
+      setError('Email and password are required!');
+      setLoading(false);
+      return;
+    }
+    try {
+      const data = await login(email, password);
+      localStorage.setItem('token', data.access_token);
+
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const [open, setOpen] = useState(false);
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
   return (
     <Container component="main" maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Snackbar
+        open={open}
+        autoHideDuration={3000} // Tự động đóng sau 3 giây
+        onClose={handleClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} 
+      >
+        <Alert onClose={handleClose} severity="success" variant="filled">
+          This is a success message!
+        </Alert>
+      </Snackbar>
       <Paper
         stroke="black"
         sx={{
@@ -27,7 +73,9 @@ const LoginForm = () => {
             Please log in to continue
         </Typography>
 
-        <Box component="form" noValidate sx={{ mt: 3 }}>
+
+        <Box component="form" noValidate sx={{ mt: 3 }} onSubmit={handleSubmit} >
+          {error && <Typography color="error" textAlign={'center'}>{error}</Typography>}
           {/* Username */}
           <TextField
             fullWidth
@@ -35,6 +83,9 @@ const LoginForm = () => {
             variant="outlined"
             margin="normal"
             placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={!!error && !email.trim()}
           />
 
           {/* Password */}
@@ -56,6 +107,8 @@ const LoginForm = () => {
                 )
               }
             }}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
 
           {/* Remember & Forgot Password */}
