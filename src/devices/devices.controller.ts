@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { DevicesService } from './devices.service';
 import { CreateDeviceDTO, DeviceAdafruitDto } from './dto';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -19,4 +19,12 @@ export class DevicesController {
     return this.devicesService.addDevice(device);
   }
 
+  @UseGuards(AuthGuard)
+  @Get('getListDevices')
+  async getListDevices(
+    @Query('pageOffset') pageOffset: number = 1, 
+    @Query('limit') limit: number = 10
+  ) {
+    return this.devicesService.getListDevices(+pageOffset, +limit);
+  }
 }

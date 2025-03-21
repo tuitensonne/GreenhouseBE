@@ -9,7 +9,7 @@ export class DevicesService {
     constructor(private readonly mqttService: MqttService,
         private readonly prisma: PrismaService
     ) {
-        this.getAllDevices();
+        this.subscribeToDevice();
     }
 
     async sendData(devicesDto: DeviceAdafruitDto) {
@@ -29,7 +29,7 @@ export class DevicesService {
             });
             this.mqttService.subscribeToDeviceData(device.topic);
             return device;
-        } catch (error) {
+        } catch (error) { 
             if (error instanceof PrismaClientKnownRequestError) {
                 if (error.code === 'P2002') {
                     throw new ConflictException('Topic has been used');
@@ -40,7 +40,30 @@ export class DevicesService {
         }
     }
 
-    async getAllDevices() {
+    async getListDevices(pageOffset: number , limit: number) {
+        const totalRecord = await this.prisma.device.count()
+        const totalPages = Math.ceil(totalRecord/ limit)
+        const listOfDevices = await this.prisma.device.findMany({
+            select: {
+                ID: true,
+                type: true,
+                topic: true
+            },
+            skip: (pageOffset - 1)*limit,
+            take: limit
+        })
+        return {
+            data: listOfDevices,
+            pagination: {
+                currentPage: pageOffset,
+                totalPages: totalPages,
+                totalItems: totalRecord,
+                limit: limit,
+              },
+        }
+    }
+
+    async subscribeToDevice() {
         const devices = await this.prisma.device.findMany({
             select: {
                 topic: true
@@ -50,7 +73,7 @@ export class DevicesService {
             this.mqttService.subscribeToDeviceData(device.topic);
         }
     }
-
+    
     async getDevice(topic: string) {
         const device = await this.prisma.device.findUnique({
             where: { topic: topic }
@@ -58,5 +81,6 @@ export class DevicesService {
         if (!device) {
             throw new NotFoundException("Topic doesn't exist");
         }
+        return device
     }
 }

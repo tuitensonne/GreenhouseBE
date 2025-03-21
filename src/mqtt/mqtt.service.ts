@@ -39,13 +39,17 @@ export class MqttService implements OnModuleDestroy {
 						}
 					}
 				})
-			} catch (err) {
+			} catch (err) { 
 				console.error(err);
 				throw new InternalServerErrorException("An error occurred! Please try again.");
 			}
-			if (device.maxValue && device.maxValue < data) {
-				this.eventSubject.next({ device });
-			} 			
+
+			// Use for notification
+			// if (device.maxValue && device.maxValue < data) {
+			// 	this.eventSubject.next({ device });
+			// }
+
+			this.eventSubject.next({ device });
 		});
 	}
 

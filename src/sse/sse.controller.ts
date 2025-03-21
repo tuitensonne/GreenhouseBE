@@ -7,7 +7,7 @@ import { map } from 'rxjs/operators';
 export class SseController {
     constructor(private readonly mqttService: MqttService) {}
 
-    @Get()
+    @Get('data')
     @Sse()
     sendEvents(): Observable<MessageEvent> { 
         return this.mqttService.getEvents().pipe(
