@@ -30,12 +30,12 @@ export class MqttService implements OnModuleDestroy {
 			const device = await this.getDevice(topic)
 			// Save record to database
 			try {
-				const record = await this.prisma.record.create({
+				const record = await this.prisma.sensorRecord.create({
 					data: {
 						value: data,
 						dateCreated: new Date(),
 						device: {
-							connect: { ID: device.ID }
+							connect: { SID: device.SID }
 						}
 					}
 				})
@@ -44,11 +44,7 @@ export class MqttService implements OnModuleDestroy {
 				throw new InternalServerErrorException("An error occurred! Please try again.");
 			}
 
-			// Use for notification
-			// if (device.maxValue && device.maxValue < data) {
-			// 	this.eventSubject.next({ device });
-			// }
-
+			device['value']=data 
 			this.eventSubject.next({ device });
 		});
 	}
@@ -82,8 +78,8 @@ export class MqttService implements OnModuleDestroy {
 	}
 
 	async getDevice(topic: string) {
-        const device = await this.prisma.device.findUnique({
-            where: { topic: topic }
+        const device = await this.prisma.sensor.findUnique({
+            where: { topic: topic },
         });
         if (!device) {
             throw new NotFoundException("Topic doesn't exist");

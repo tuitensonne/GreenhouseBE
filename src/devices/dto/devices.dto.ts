@@ -4,7 +4,16 @@ export interface DeviceAdafruitDto {
 }
 
 export interface CreateDeviceDTO {
-    maxValue:    number
-    type:        string
-    topic:       string
+    deviceType: string
+    topic: string
+    greenHouseId: number
+    userId: number
+
+    status: number
+    value: number
+    maxValue: number
+    
+    controllerType: string
+    sensorType: string
+
 }

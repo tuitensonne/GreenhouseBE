@@ -19,12 +19,12 @@ export class DevicesController {
     return this.devicesService.addDevice(device);
   }
 
-  @UseGuards(AuthGuard)
-  @Get('getListDevices')
-  async getListDevices(
-    @Query('pageOffset') pageOffset: number = 1, 
-    @Query('limit') limit: number = 10
-  ) {
-    return this.devicesService.getListDevices(+pageOffset, +limit);
-  }
+  // @UseGuards(AuthGuard)
+  // @Get('getListDevices')
+  // async getListDevices(
+  //   @Query('pageOffset') pageOffset: number = 1, 
+  //   @Query('limit') limit: number = 10
+  // ) {
+  //   return this.devicesService.getListDevices(+pageOffset, +limit);
+  // }
 }

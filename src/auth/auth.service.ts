@@ -45,7 +45,7 @@ export class AuthService {
                 data: {
                     username: authDto.username,
                     email: authDto.email,
-                    password: hash
+                    password: hash,
                 }
             })
             return user
