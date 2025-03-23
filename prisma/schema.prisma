@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model GreedHouse {
+model GreenHouse {
   GID          Int     @id @default(autoincrement())
   name        String
   location    String
@@ -35,7 +35,7 @@ model Sensor {
   topic         String        @unique
   records     SensorRecord[]
 
-  greenHouse  GreedHouse    @relation(fields: [greenHouseID], references: [GID])
+  greenHouse  GreenHouse    @relation(fields: [greenHouseID], references: [GID])
   greenHouseID Int
 
   user        User?         @relation(fields: [userID], references: [ID])
@@ -60,7 +60,7 @@ model Controller {
   topic         String        @unique
   records     ControllerRecord[]
 
-  greenHouse  GreedHouse    @relation(fields: [greenHouseID], references: [GID])
+  greenHouse  GreenHouse    @relation(fields: [greenHouseID], references: [GID])
   greenHouseID Int
 
   user        User?         @relation(fields: [userID], references: [ID])

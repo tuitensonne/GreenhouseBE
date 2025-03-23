@@ -7,6 +7,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class MqttService implements OnModuleDestroy {
 	private client: mqtt.MqttClient;
 	private eventSubject = new Subject<any>();
+	private greenhouseId: number;
 
 	constructor(private readonly prisma: PrismaService
 	) {
@@ -27,30 +28,34 @@ export class MqttService implements OnModuleDestroy {
 		// Listen to device
 		this.client.on('message', async (topic, message) => {
 			const data = Number(message.toString());
-			const device = await this.getDevice(topic)
-			// Save record to database
-			try {
-				const record = await this.prisma.sensorRecord.create({
-					data: {
-						value: data,
-						dateCreated: new Date(),
-						device: {
-							connect: { SID: device.SID }
+			const {device, flag} = await this.getDevice(topic, this.greenhouseId);
+			if (device) {
+				device['value']=data
+				
+				try {
+					const record = await this.prisma.sensorRecord.create({
+						data: {
+							value: data,
+							dateCreated: new Date(), 
+							device: {
+								connect: { SID: device.SID }
+							}
 						}
-					}
-				})
-			} catch (err) { 
-				console.error(err);
-				throw new InternalServerErrorException("An error occurred! Please try again.");
-			}
+					})
+				} catch (err) { 
+					console.error(err);
+					throw new InternalServerErrorException("An error occurred! Please try again.");
+				}
 
-			device['value']=data 
-			this.eventSubject.next({ device });
+				if(flag) {
+					this.eventSubject.next({ device });
+				}
+			}
 		});
 	}
 
 	async sendDataToAdafruit(topic: string, value: number) {
-		this.client.publish(topic, `${value}`, (err) => {
+		return this.client.publish(topic, `${value}`, (err) => {
 			if (err) {
 				console.error('Error publishing to MQTT:', err);
 			} else {
@@ -73,17 +78,27 @@ export class MqttService implements OnModuleDestroy {
 		this.client.end();
 	}
 	
-	getEvents() {
+	getEvents(greenhouseId: number) {
+		this.greenhouseId = greenhouseId;
 		return this.eventSubject.asObservable();
 	}
 
-	async getDevice(topic: string) {
-        const device = await this.prisma.sensor.findUnique({
-            where: { topic: topic },
-        });
-        if (!device) {
-            throw new NotFoundException("Topic doesn't exist");
-        }
-        return device
+	async getDevice(topic: string, greenhouseId: number) {
+		try {
+			const device = await this.prisma.sensor.findUnique({
+				where: { 
+					topic: topic,
+				},
+			});
+
+			if (device && device.greenHouseID !== greenhouseId) {
+				return { device: device , flag: false}
+			} else {
+				return { device: device , flag: true}
+			}
+		} catch (error) {
+			console.error(error);
+			throw new NotFoundException('Device not found');
+		}
     }
 }

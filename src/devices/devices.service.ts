@@ -1,5 +1,5 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { CreateDeviceDTO, DeviceAdafruitDto } from './dto';
+import { CreateControllerDTO, CreateSensorDTO, DeviceAdafruitDto } from './dto';
 import { MqttService } from 'src/mqtt/mqtt.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -13,48 +13,88 @@ export class DevicesService {
     }
 
     async sendData(devicesDto: DeviceAdafruitDto) {
-        await this.getDevice(devicesDto.topic)
-        await this.mqttService.sendDataToAdafruit(devicesDto.topic, devicesDto.value);
+        // Check whether the topic exists
+        const device = await this.getDevice(devicesDto.deviceId)
+        // Send data to Adafruit IO
+        try {
+            await this.mqttService.sendDataToAdafruit(device.topic, devicesDto.value);
+        } catch (error) {
+            console.log(error);
+            throw new InternalServerErrorException("An error occurred! Please try again.");
+        }
+
+        // save record to database
+        try {
+            const record = await this.prisma.controllerRecord.create({
+                data: {
+                    status: devicesDto.status,
+                    value: devicesDto.value,
+                    dateCreated: new Date(),
+                    device: {
+                        connect: { CID: device.CID }
+                    },
+                    user: {
+                        connect: { ID: devicesDto.userId }
+                    }
+                }
+            })
+        } catch (error) {
+            console.error(error);
+            throw new InternalServerErrorException("An error occurred! Please try again.");
+        }
         return { message: 'Data sent to Adafruit IO!' };
     }
 
-    async addDevice(deviceDto: CreateDeviceDTO) {
+    async addController(deviceDto: CreateControllerDTO) {
         try {
-            var device;
-            if (deviceDto.deviceType === 'sensor') {
-                device = await this.prisma.sensor.create({
-                    data: {
-                        maxValue: deviceDto.maxValue,
-                        sensorType: deviceDto.sensorType,
-                        
-                        topic: deviceDto.topic,
-                        deviceType: deviceDto.deviceType,
-                        greenHouse: {
-                            connect: { GID: deviceDto.greenHouseId }
-                        },
-                        user: {
-                            connect: { ID: deviceDto.userId }
-                        }
-                    }
-                });
-            } else if (deviceDto.deviceType === 'controller') {
-                device = await this.prisma.controller.create({
-                    data: {
-                        status: deviceDto.status,
-                        controllerType: deviceDto.controllerType,
-                        value: deviceDto.value,
+            const device = await this.prisma.controller.create({
+                data: {
+                    status: deviceDto.status,
+                    controllerType: deviceDto.controllerType,
+                    value: deviceDto.value,
 
-                        topic: deviceDto.topic,
-                        deviceType: deviceDto.deviceType,
-                        greenHouse: {
-                            connect: { GID: deviceDto.greenHouseId }
-                        },
-                        user: {
-                            connect: { ID: deviceDto.userId }
-                        }
+                    topic: deviceDto.topic,
+                    deviceType: deviceDto.deviceType,
+                    greenHouse: {
+                        connect: { GID: deviceDto.greenHouseId }
+                    },
+                    user: {
+                        connect: { ID: deviceDto.userId }
                     }
-                });
+                }
+            });
+            return device;
+        } catch (error) { 
+            if (error instanceof PrismaClientKnownRequestError) {
+                if (error.code === 'P2002') {
+                    throw new ConflictException('Topic has been used');
+                }
             }
+            console.error(error);
+            throw new InternalServerErrorException("An error occurred! Please try again.");
+        }
+    }
+
+    async addSensor(deviceDto: CreateSensorDTO) {
+        try {
+            const device = await this.prisma.sensor.create({
+                data: {
+                    maxValue: deviceDto.maxValue,
+                    sensorType: deviceDto.sensorType,
+                    
+                    topic: deviceDto.topic,
+                    deviceType: deviceDto.deviceType,
+                    greenHouse: {
+                        connect: { GID: deviceDto.greenHouseId }
+                    },
+                    user: {
+                        connect: { ID: deviceDto.userId }
+                    }
+                }
+            });
+
+            this.mqttService.subscribeToDeviceData(deviceDto.topic);
+            return device;
         }  catch (error) { 
             if (error instanceof PrismaClientKnownRequestError) {
                 if (error.code === 'P2002') {
@@ -64,9 +104,6 @@ export class DevicesService {
             console.error(error);
             throw new InternalServerErrorException("An error occurred! Please try again.");
         }
-
-        this.mqttService.subscribeToDeviceData(deviceDto.topic);
-        return device;
     }
 
     // async getListDevices(pageOffset: number , limit: number) {
@@ -105,12 +142,12 @@ export class DevicesService {
         }
     }
     
-    async getDevice(topic: string) {
+    async getDevice(deviceId: number) {
         const device = await this.prisma.controller.findUnique({
-            where: { topic: topic }
+            where: { CID: deviceId }
         });
         if (!device) {
-            throw new NotFoundException("Topic doesn't exist");
+            throw new NotFoundException("Device doesn't exist");
         }
         return device
     }

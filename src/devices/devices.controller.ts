@@ -1,9 +1,17 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { DevicesService } from './devices.service';
-import { CreateDeviceDTO, DeviceAdafruitDto } from './dto';
+import { CreateControllerDTO, CreateSensorDTO, DeviceAdafruitDto } from './dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('devices')
+@UsePipes(new ValidationPipe({
+  transform: true,
+  whitelist: true,
+  forbidNonWhitelisted: true,
+  transformOptions: {
+    enableImplicitConversion: true,
+  },
+}))
 export class DevicesController {
   constructor(private readonly devicesService: DevicesService) {}
 
@@ -14,9 +22,15 @@ export class DevicesController {
   }
 
   @UseGuards(AuthGuard)
-  @Post('addDevice')
-  async addDevice(@Body() device: CreateDeviceDTO) {
-    return this.devicesService.addDevice(device);
+  @Post('addController')
+  async addDevice(@Body() device: CreateControllerDTO) {
+    return this.devicesService.addController(device);
+  }
+ 
+  @UseGuards(AuthGuard)
+  @Post('addSensor')
+  async addSensor(@Body() device: CreateSensorDTO) {
+    return this.devicesService.addSensor(device);
   }
 
   // @UseGuards(AuthGuard)

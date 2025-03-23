@@ -1,4 +1,4 @@
-import { Controller, Get, Sse, MessageEvent } from '@nestjs/common';
+import { Controller, Get, Sse, MessageEvent, Query } from '@nestjs/common';
 import { MqttService } from 'src/mqtt/mqtt.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -9,11 +9,11 @@ export class SseController {
 
     @Get('data')
     @Sse()
-    sendEvents(): Observable<MessageEvent> { 
-        return this.mqttService.getEvents().pipe(
+    sendEvents(@Query("greenhouse") greenhouseId: string): Observable<MessageEvent> { 
+        return this.mqttService.getEvents(+greenhouseId).pipe(
             map((data) => ({
                 data: JSON.stringify(data)
             }))
         );
-    }
+    } 
 }
