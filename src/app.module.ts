@@ -6,12 +6,12 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { AppService } from './app.service';
-import { SseController } from './sse/sse.controller';
+import { SseModule } from './sse/sse.module';
 
 @Module({
-  controllers: [AppController, SseController],
+  controllers: [AppController],
   providers: [AppService],
-  imports: [DevicesModule, MqttModule, AuthModule, PrismaModule, UserModule],
+  imports: [DevicesModule, MqttModule, AuthModule, PrismaModule, UserModule, SseModule],
   
 })
 export class AppModule {}
