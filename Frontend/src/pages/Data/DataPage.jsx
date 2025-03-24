@@ -6,8 +6,54 @@ import Light from './Light';
 import Humidity from './Humid';
 import Temperature from './Temperature';
 import Earth from './Earth';
+import { useEffect, useState } from 'react';
+import { subscribeGreenhouseData } from '../../apis/deviceApi';
 
 const DataPage = () => {
+    const [humidityValue, setHumidityValue] = useState(null)
+    const [lightValue, setLightValue] = useState(null)
+    const [temperatureValue, setTemperatureValue] = useState(null)
+    const [earthValue, setEarthValue] = useState(null)
+    const [error, setError] = useState(null)
+
+    const handleSensorData = (sensorData) => {
+        sensorData.forEach(({ sensorType, value }) => {
+            switch (sensorType) {
+                case 'humidity':
+                    setHumidityValue(value)
+                    break
+                case 'light':
+                    setLightValue(value)
+                    break
+                case 'temperature':
+                    setTemperatureValue(value)
+                    break
+                case 'earth':
+                    setEarthValue(value)
+                    break
+                default:
+                    console.warn('Loại cảm biến không xác định:', sensorType)
+            }
+        })
+    }
+
+    useEffect(() => {
+        const greenhouseId = 1
+        const eventSource = subscribeGreenhouseData(
+            greenhouseId,
+            (newData) => {
+                if (Array.isArray(newData)) {
+                handleSensorData(newData)
+            }
+            },
+            (err) => setError('Không thể kết nối SSE')
+        )
+
+        return () => {
+            eventSource.close()
+        }
+    }, [])
+
   return (
     <Box sx={{ display: 'flex' }}>
         <CssBaseline />
@@ -23,18 +69,18 @@ const DataPage = () => {
             <Divider sx={{ mb: 3 }} color='#DDE1E6' ></Divider>
             <Stack direction="row" spacing={3} justifyContent="center" alignItems="stretch">
                 <Box sx={{ flex: 1, textAlign: 'center' }}>
-                    <Light achieved={900} total={1000} />
+                    <Light achieved={lightValue !== null ? `${lightValue}` : '--'} total={100} />
                 </Box>
                 <Box sx={{ flex: 1, textAlign: 'center' }}>
-                    <Temperature achieved={38} total={100} />
+                    <Temperature achieved={temperatureValue !== null ? `${temperatureValue}` : '--'} total={100} />
                 </Box>
                 <Box sx={{ flex: 1, textAlign: 'center' }}>
                     <Stack direction='column' spacing={2} justifyContent='center'>
                         {/* <Box sx={{ flex: 1, textAlign: 'center' }}> */}
-                            <Humidity value={67} total={100} />
+                            <Humidity value={humidityValue !== null ? `${humidityValue}` : '--'} total={100} />
                         {/* </Box>
                         <Box sx={{ flex: 1, textAlign: 'center' }}> */}
-                            <Earth value={67} total={100} />
+                            <Earth value={earthValue !== null ? `${earthValue}` : '--'} total={100} />
                         {/* </Box> */}
                     </Stack>
                 </Box>
