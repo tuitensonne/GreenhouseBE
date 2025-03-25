@@ -15,7 +15,7 @@ const Sidebar = () => {
       path: '/'
     },
     { text: 'Data', icon: <Storage sx={{ color: 'black' }} />, path: '/data' },
-    { text: 'Devices', icon: <Devices sx={{ color: 'black' }} />, path: '/devices' },
+    { text: 'Devices', icon: <Devices sx={{ color: 'black' }} />, path: '/device' },
     { text: 'Schedule', icon: <CalendarToday sx={{ color: 'black' }} />, path: '/schedule' },
     { text: 'History', icon: <History sx={{ color: 'black' }} />, path: '/history' }
   ]
@@ -27,8 +27,6 @@ const Sidebar = () => {
     localStorage.removeItem('token');
     navigate('/Login');
   }
-
-  console.log(isAuthenticated);
   return (
     <Drawer
       variant='permanent'

@@ -10,6 +10,8 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useState } from 'react';
 import { login } from '../../apis/auth';
 import { useNavigate } from 'react-router-dom';
+import { loginUserAPI } from '../../redux/Slices/userSlice.js'
+import { useDispatch } from 'react-redux';
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false)
@@ -18,6 +20,7 @@ const LoginForm = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
@@ -28,6 +31,7 @@ const LoginForm = () => {
       return;
     }
     try {
+      // const data = dispatch(loginUserAPI(loginUserAPI({email, password})));
       const data = await login(email, password);
       localStorage.setItem('token', data.access_token);
 
