@@ -11,7 +11,7 @@ const initialState = {
 export const loginUserAPI = createAsyncThunk(
   'user/loginUserAPI',
   async (data) => {
-    const response = await authorizedAxios.post(`${BASE_URL}/auth/token`, data)
+    const response = await authorizedAxios.post(`${BASE_URL}/auth/signin`, data)
     return response.data
   }
 )
