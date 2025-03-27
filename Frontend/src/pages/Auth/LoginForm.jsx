@@ -83,7 +83,7 @@ const LoginForm = () => {
           {/* Username */}
           <TextField
             fullWidth
-            label="Username"
+            label="Email"
             variant="outlined"
             margin="normal"
             placeholder="Enter your email"
